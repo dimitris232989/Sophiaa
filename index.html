@@ -1,0 +1,834 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>How Well Do You Know Us?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-1:#000000;
+    --bg-2:#050505;
+    --neon-pink:#ff2e9a;
+    --neon-pink-soft:#ff8fd4;
+    --neon-purple:#a855f7;
+    --neon-cyan:#22e5ff;
+    --ink:#ffffff;
+    --ink-dim:#999999;
+    --line:rgba(255,255,255,0.14);
+    --line-strong:rgba(255,255,255,0.32);
+    --good:#39ff88;
+    --bad:#ff3b5c;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 88% 2%, rgba(255,46,154,0.14) 0%, transparent 32%),
+      radial-gradient(circle at 6% 96%, rgba(34,229,255,0.12) 0%, transparent 32%),
+      linear-gradient(165deg, var(--bg-1) 0%, var(--bg-2) 100%);
+    font-family:'Inter', 'Segoe UI', sans-serif;
+    color:var(--ink);
+    overflow-x:hidden;
+  }
+  .hearts-bg{ position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+  .float-heart{
+    position:absolute; bottom:-10%; font-size:1.1rem;
+    opacity:0.55; animation:rise linear infinite; user-select:none;
+    filter:drop-shadow(0 0 5px currentColor);
+  }
+  @keyframes rise{
+    0%{ transform:translateY(0) translateX(0) rotate(0deg); opacity:0; }
+    10%{ opacity:0.5; } 90%{ opacity:0.3; }
+    100%{ transform:translateY(-110vh) translateX(var(--drift,20px)) rotate(20deg); opacity:0; }
+  }
+
+  .stage{
+    position:relative; z-index:1; min-height:100vh;
+    display:flex; align-items:center; justify-content:center; padding:56px 24px;
+  }
+  .panel{ width:100%; max-width:600px; }
+
+  .kicker{
+    font-size:0.72rem; text-transform:uppercase; letter-spacing:3px; font-weight:600;
+    color:var(--neon-cyan); text-shadow:0 0 10px rgba(34,229,255,0.55); margin:0 0 18px;
+  }
+
+  h1.title{
+    font-family:'Anton', 'Inter', sans-serif; font-weight:400; font-style:normal;
+    text-transform:uppercase; letter-spacing:-0.5px;
+    font-size:clamp(2.4rem, 7.5vw, 3.6rem); line-height:0.98; color:var(--ink);
+    margin:0 0 14px;
+  }
+  h1.title em{
+    font-style:normal; color:var(--neon-pink-soft);
+    text-shadow:0 0 22px rgba(255,46,154,0.45);
+  }
+  .subtitle{ font-size:1rem; color:var(--ink-dim); margin:0 0 40px; max-width:40ch; }
+
+  .rule{ border:none; border-top:1px solid var(--line); margin:0 0 40px; }
+
+  .lock-row{ display:flex; gap:12px; align-items:stretch; flex-wrap:wrap; }
+  .lock-input{
+    flex:1; min-width:160px;
+    background:rgba(255,255,255,0.03); border:1px solid var(--line-strong);
+    color:var(--ink); font-family:'Inter', sans-serif; font-size:1.05rem; letter-spacing:3px;
+    padding:14px 16px; text-align:center;
+  }
+  .lock-input::placeholder{ color:var(--ink-dim); letter-spacing:2px; opacity:0.6; }
+  .lock-input:focus{ outline:none; border-color:var(--neon-cyan); box-shadow:0 0 14px rgba(34,229,255,0.3); }
+  .lock-input.shake{ animation:lockShake .4s ease; border-color:var(--bad); }
+  @keyframes lockShake{
+    10%,90%{ transform:translateX(-2px); } 20%,80%{ transform:translateX(4px); }
+    30%,50%,70%{ transform:translateX(-8px); } 40%,60%{ transform:translateX(8px); }
+  }
+  .lock-submit{ margin-top:0; flex:none; }
+  .lock-submit::after{ display:none; }
+  .lock-submit{ border:1px solid var(--line-strong); padding:0 22px; }
+  .lock-submit:hover{ border-color:var(--neon-pink); }
+  .lock-error{
+    margin-top:16px; font-size:0.85rem; color:var(--bad);
+    text-shadow:0 0 8px rgba(255,59,92,0.5);
+  }
+
+  .enter-row{ display:flex; align-items:center; gap:18px; }
+  .heart-btn{
+    background:none; border:1.5px solid var(--line-strong); border-radius:50%;
+    cursor:pointer; width:74px; height:74px; flex:none;
+    display:flex; align-items:center; justify-content:center;
+    transition:border-color .2s ease, box-shadow .2s ease, transform .15s ease;
+  }
+  .heart-btn:hover{ border-color:var(--neon-pink); box-shadow:0 0 24px rgba(255,46,154,0.45); transform:scale(1.04); }
+  .heart-btn:active{ transform:scale(0.96); }
+  .heart-btn svg{ width:30px; height:28px; animation:pulseGlow 2.2s ease-in-out infinite; }
+  @keyframes pulseGlow{
+    0%,100%{ filter:drop-shadow(0 0 4px rgba(255,46,154,0.5)); }
+    50%{ filter:drop-shadow(0 0 12px rgba(255,46,154,0.9)); }
+  }
+  .enter-label{ font-size:0.78rem; text-transform:uppercase; letter-spacing:2.5px; color:var(--ink-dim); font-weight:600; }
+
+  .folio-row{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:10px; }
+  .folio{
+    font-variant-numeric:tabular-nums; font-size:0.78rem; letter-spacing:2px;
+    color:var(--ink-dim); text-transform:uppercase; font-weight:600;
+  }
+  .progress-line{ width:100%; height:1px; background:var(--line); margin-bottom:34px; position:relative; }
+  .progress-line .fill{
+    position:absolute; top:0; left:0; height:1px;
+    background:linear-gradient(90deg, var(--neon-cyan), var(--neon-pink));
+    box-shadow:0 0 8px rgba(255,46,154,0.6);
+    transition:width .4s ease;
+  }
+
+  .q-text{
+    font-family:'Inter', sans-serif; font-style:normal; font-weight:700;
+    font-size:clamp(1.25rem, 3.6vw, 1.5rem); line-height:1.35; color:var(--ink);
+    margin:0 0 28px;
+  }
+
+  /* text options: editorial list rows */
+  .options{ display:flex; flex-direction:column; }
+  .opt-row{
+    display:flex; align-items:center; gap:16px;
+    padding:16px 4px; border-top:1px solid var(--line);
+    background:none; border-left:none; border-right:none; border-bottom:none;
+    font-family:'Inter', sans-serif; font-weight:500; font-size:1rem; color:var(--ink);
+    cursor:pointer; text-align:left; width:100%; transition:all .15s ease;
+  }
+  .options .opt-row:last-child{ border-bottom:1px solid var(--line); }
+  .opt-row .mark{
+    font-family:'Inter', sans-serif; font-weight:700; font-size:0.82rem;
+    color:var(--ink-dim); width:22px; flex:none; letter-spacing:0.5px;
+    transition:color .15s ease, text-shadow .15s ease;
+  }
+  .opt-row:hover:not(:disabled){ padding-left:12px; }
+  .opt-row:hover:not(:disabled) .mark{ color:var(--neon-cyan); text-shadow:0 0 8px rgba(34,229,255,0.6); }
+  .opt-row:disabled{ cursor:default; }
+  .opt-row.correct{ color:var(--good); }
+  .opt-row.correct .mark{ color:var(--good); text-shadow:0 0 8px rgba(57,255,136,0.6); }
+  .opt-row.incorrect{ color:var(--bad); }
+  .opt-row.incorrect .mark{ color:var(--bad); text-shadow:0 0 8px rgba(255,59,92,0.6); }
+  .opt-row.faded{ color:var(--ink-dim); opacity:0.5; }
+
+  /* photo options: sharp grid with lettered corners */
+  .photo-options{ display:grid; grid-template-columns:1fr 1fr; gap:2px; }
+  .photo-opt{
+    position:relative; overflow:hidden; cursor:pointer;
+    border:1px solid var(--line-strong); aspect-ratio:1/1; background:var(--bg-2);
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .photo-opt img{
+    width:100%; height:100%; object-fit:cover; display:block;
+    filter:grayscale(100%) contrast(1.05) brightness(0.86); transition:filter .2s ease;
+  }
+  .photo-opt:hover:not(.locked) img{ filter:grayscale(60%) contrast(1.1) brightness(1); }
+  .photo-opt .mark{
+    position:absolute; top:8px; left:8px; font-size:0.72rem; font-weight:700;
+    letter-spacing:1px; color:var(--ink); background:rgba(0,0,0,0.6);
+    padding:2px 7px;
+  }
+  .photo-opt.correct{ border-color:var(--good); box-shadow:0 0 18px rgba(57,255,136,0.5); }
+  .photo-opt.incorrect{ border-color:var(--bad); box-shadow:0 0 18px rgba(255,59,92,0.45); }
+  .photo-opt.dim{ opacity:0.5; }
+
+  .reveal{
+    margin-top:24px; padding-left:20px; border-left:2px solid var(--neon-purple);
+    font-family:'Inter', sans-serif; font-style:normal; font-weight:600; font-size:1rem;
+    line-height:1.55; color:var(--ink); text-align:left;
+  }
+  .reveal .tag{
+    display:block; font-family:'Inter', sans-serif; font-style:normal;
+    font-size:0.7rem; text-transform:uppercase; letter-spacing:2px;
+    font-weight:700; margin-bottom:6px;
+  }
+  .reveal.good{ border-left-color:var(--good); }
+  .reveal.bad{ border-left-color:var(--bad); }
+  .reveal.good .tag{ color:var(--good); text-shadow:0 0 8px rgba(57,255,136,0.6); }
+  .reveal.bad .tag{ color:var(--bad); text-shadow:0 0 8px rgba(255,59,92,0.6); }
+
+  .next-row{ margin-top:30px; }
+  .next-btn{
+    background:none; border:none; color:var(--ink); font-family:'Inter', sans-serif;
+    font-weight:600; font-size:0.82rem; letter-spacing:2.5px; text-transform:uppercase;
+    cursor:pointer; padding:10px 0; display:inline-flex; align-items:center; gap:10px;
+    position:relative;
+  }
+  .next-btn::after{ content:''; position:absolute; left:0; right:0; bottom:6px; height:1px; background:var(--line-strong); }
+  .next-btn span.arrow{ color:var(--neon-cyan); text-shadow:0 0 8px rgba(34,229,255,0.6); transition:transform .2s ease; }
+  .next-btn:hover span.arrow{ transform:translateX(4px); }
+  .next-btn:hover{ color:var(--neon-pink-soft); }
+
+  .finale .kicker{ color:var(--neon-pink-soft); text-shadow:0 0 10px rgba(255,46,154,0.5); }
+  .finale h2{
+    font-family:'Anton', 'Inter', sans-serif; font-style:normal; font-weight:400;
+    text-transform:uppercase; letter-spacing:-0.3px;
+    font-size:clamp(1.9rem, 5.5vw, 2.4rem); line-height:1; color:var(--ink); margin:0 0 4px;
+  }
+  .score{
+    font-family:'Anton', 'Inter', sans-serif; font-style:normal; font-weight:400;
+    font-size:clamp(2.6rem, 9vw, 3.8rem); margin:10px 0 22px;
+    background:linear-gradient(90deg, var(--neon-cyan), var(--neon-pink-soft), var(--neon-purple));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    filter:drop-shadow(0 0 16px rgba(255,46,154,0.4));
+  }
+  .finale p.msg{ font-size:1rem; color:var(--ink-dim); line-height:1.65; margin:0 0 36px; max-width:46ch; }
+  .replay-btn{
+    background:none; border:1px solid var(--line-strong); color:var(--ink-dim);
+    padding:12px 26px; font-family:'Inter', sans-serif; font-weight:600; letter-spacing:2px;
+    text-transform:uppercase; font-size:0.76rem; cursor:pointer; transition:all .2s ease;
+  }
+  .replay-btn:hover{ border-color:var(--neon-cyan); color:var(--neon-cyan); box-shadow:0 0 18px rgba(34,229,255,0.35); }
+
+  .reward{
+    text-align:left; margin-top:34px; padding-top:30px;
+    border-top:1px solid var(--line);
+    animation:rewardIn .5s cubic-bezier(.2,.8,.3,1);
+  }
+  @keyframes rewardIn{ from{ opacity:0; transform:translateY(10px);} to{ opacity:1; transform:translateY(0);} }
+  .reward-h{
+    font-family:'Anton', 'Inter', sans-serif; font-weight:400; text-transform:uppercase;
+    letter-spacing:-0.3px; font-size:clamp(1.6rem, 5vw, 2rem); line-height:1;
+    color:var(--ink); margin:0 0 22px;
+  }
+  .reward-tabs{ display:flex; gap:0; margin-bottom:24px; }
+  .reward-tab{
+    flex:1; background:none; border:1px solid var(--line-strong); color:var(--ink-dim);
+    padding:13px 10px; font-family:'Inter', sans-serif; font-weight:700; font-size:0.72rem;
+    letter-spacing:1.5px; text-transform:uppercase; cursor:pointer; transition:all .2s ease;
+  }
+  .reward-tab + .reward-tab{ border-left:none; }
+  .reward-tab:hover{ color:var(--ink); }
+  .reward-tab.active{
+    color:var(--ink); border-color:var(--neon-pink);
+    box-shadow:inset 0 0 0 1px var(--neon-pink), 0 0 16px rgba(255,46,154,0.35);
+  }
+  .reward-prompt{ font-size:0.92rem; color:var(--ink-dim); margin:0 0 14px; }
+  .reward-panel input[type="text"], .reward-panel textarea{
+    width:100%; background:rgba(255,255,255,0.03); border:1px solid var(--line-strong);
+    color:var(--ink); font-family:'Inter', sans-serif; font-size:0.95rem; padding:13px 14px;
+    margin-bottom:16px; resize:vertical;
+  }
+  .reward-panel input[type="text"]:focus, .reward-panel textarea:focus{
+    outline:none; border-color:var(--neon-cyan); box-shadow:0 0 14px rgba(34,229,255,0.3);
+  }
+  .reward-btn::after{ display:none; }
+  .reward-btn{ border:1px solid var(--line-strong); padding:12px 20px; }
+  .reward-btn:hover{ border-color:var(--neon-pink); }
+  .reward-confirm{ padding:6px 0 4px; animation:rewardIn .4s ease; }
+  .reward-confirm .big{
+    font-family:'Anton', 'Inter', sans-serif; font-weight:400; text-transform:uppercase;
+    font-size:clamp(1.6rem, 5vw, 2.1rem); line-height:1; margin:0 0 12px;
+    background:linear-gradient(90deg, var(--neon-cyan), var(--neon-pink-soft), var(--neon-purple));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    filter:drop-shadow(0 0 14px rgba(255,46,154,0.4));
+  }
+  .reward-confirm .quote{
+    font-family:'Inter', sans-serif; font-weight:600; font-size:1.05rem; color:var(--ink);
+    padding-left:16px; border-left:2px solid var(--neon-pink); margin:0 0 12px;
+  }
+  .reward-confirm .fine-print{ font-size:0.82rem; color:var(--ink-dim); margin:0; }
+
+  .now-playing{
+    position:fixed; bottom:18px; right:18px; z-index:5;
+    width:200px;
+    border:1px solid var(--line-strong);
+    background:rgba(0,0,0,0.7); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+    box-shadow:0 0 24px rgba(255,46,154,0.25);
+  }
+  .now-playing .np-label{
+    display:flex; align-items:center; gap:7px;
+    padding:8px 10px; font-family:'Inter', sans-serif; font-size:0.64rem;
+    letter-spacing:1.5px; text-transform:uppercase; color:var(--ink-dim);
+    border-bottom:1px solid var(--line);
+  }
+  .now-playing .dot{
+    width:6px; height:6px; border-radius:50%; background:var(--neon-pink);
+    box-shadow:0 0 6px rgba(255,46,154,0.8); animation:musicPulse 1.4s ease-in-out infinite;
+  }
+  @keyframes musicPulse{ 0%,100%{ transform:scale(1); opacity:1; } 50%{ transform:scale(1.5); opacity:0.55; } }
+  .now-playing iframe{ display:block; width:100%; height:112px; border:none; }
+
+  .play-music-btn{
+    position:fixed; bottom:18px; right:18px; z-index:5;
+    display:flex; align-items:center; gap:8px;
+    padding:11px 16px; border:1px solid var(--line-strong);
+    background:rgba(0,0,0,0.7); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+    color:var(--ink); font-family:'Inter', sans-serif; font-weight:700; font-size:0.72rem;
+    letter-spacing:1.5px; text-transform:uppercase; cursor:pointer; transition:all .2s ease;
+  }
+  .play-music-btn:hover{ border-color:var(--neon-pink); box-shadow:0 0 16px rgba(255,46,154,0.4); }
+  .play-music-btn .note{ color:var(--neon-cyan); text-shadow:0 0 8px rgba(34,229,255,0.6); }
+
+  [hidden]{ display:none !important; }
+
+  @media (max-width:520px){
+    .stage{ padding:36px 16px 96px; }
+    h1.title{ font-size:clamp(2rem, 9vw, 2.6rem); }
+    .subtitle{ margin-bottom:30px; }
+    .rule{ margin-bottom:28px; }
+    .heart-btn{ width:62px; height:62px; }
+    .heart-btn svg{ width:26px; height:24px; }
+    .q-text{ font-size:clamp(1.1rem, 4.6vw, 1.3rem); margin-bottom:22px; }
+    .opt-row{ padding:14px 2px; font-size:0.94rem; gap:12px; }
+    .opt-row:hover:not(:disabled){ padding-left:8px; }
+    .photo-options{ gap:2px; }
+    .photo-opt .mark{ font-size:0.66rem; padding:2px 6px; }
+    .reward-tabs{ flex-direction:column; gap:8px; }
+    .reward-tab{ border:1px solid var(--line-strong) !important; }
+    .reward-tab + .reward-tab{ border-left:1px solid var(--line-strong); }
+    .reward-h{ font-size:clamp(1.35rem, 7vw, 1.7rem); }
+    .finale h2{ font-size:clamp(1.55rem, 8vw, 1.9rem); }
+    .score{ font-size:clamp(2.2rem, 13vw, 2.8rem); }
+
+    .now-playing{ width:min(52vw, 180px); bottom:12px; right:12px; }
+    .now-playing iframe{ height:min(29vw, 101px); }
+    .now-playing .np-label{ font-size:0.58rem; padding:7px 8px; }
+    .play-music-btn{ bottom:12px; right:12px; padding:9px 13px; font-size:0.66rem; }
+  }
+
+  @media (max-width:360px){
+    .reward-btn{ width:100%; justify-content:center; }
+    .next-btn{ font-size:0.74rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hearts-bg" id="heartsBg"></div>
+
+<div class="now-playing" id="nowPlaying" hidden>
+  <div class="np-label"><span class="dot"></span>Now Playing</div>
+  <iframe id="ytFrame" src="" title="Music" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+</div>
+<button class="play-music-btn" id="playMusicBtn" type="button">
+  <span class="note">♫</span> Play a Song
+</button>
+
+<div class="stage">
+  <div class="panel">
+
+    <div id="lockView">
+      <p class="kicker">Private — For Sophia's Eyes Only</p>
+      <h1 class="title">Enter The<br>Password</h1>
+      <p class="subtitle">You know this date better than anyone. Type it in — no spaces, no slashes. And once you're in: answer every question right ;)</p>
+      <hr class="rule" />
+      <div class="lock-row">
+        <input type="password" id="lockInput" class="lock-input" placeholder="DDMMYYYY" inputmode="numeric" autocomplete="off" maxlength="12" />
+        <button class="next-btn lock-submit" id="lockSubmit" type="button"><span>Unlock</span> <span class="arrow">→</span></button>
+      </div>
+      <p class="lock-error" id="lockError" hidden>Not quite — try again.</p>
+    </div>
+
+    <div id="startView" hidden>
+      <p class="kicker">A Private Trivia — For Sophia</p>
+      <h1 class="title">How well do<br>you know <em>us?</em></h1>
+      <p class="subtitle">Fourteen questions about our story. The answers are closer together than you'd think.</p>
+      <hr class="rule" />
+      <div class="enter-row">
+        <button class="heart-btn" id="startBtn" aria-label="Start">
+          <svg viewBox="0 0 32 29" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16 27.5C16 27.5 2 19.3 2 9.9C2 5.4 5.6 1.8 10 1.8C12.7 1.8 15 3.1 16 5.2C17 3.1 19.3 1.8 22 1.8C26.4 1.8 30 5.4 30 9.9C30 19.3 16 27.5 16 27.5Z" stroke="url(#g)" stroke-width="1.6" fill="none"/>
+            <defs>
+              <linearGradient id="g" x1="2" y1="1.8" x2="30" y2="27.5" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#ff8fd4"/>
+                <stop offset="1" stop-color="#a855f7"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </button>
+        <span class="enter-label">Begin</span>
+      </div>
+    </div>
+
+    <div id="quizView" hidden>
+      <div class="folio-row">
+        <span class="kicker" style="margin:0;">Question</span>
+        <span class="folio" id="qFolio">01 / 13</span>
+      </div>
+      <div class="progress-line"><div class="fill" id="progressFill"></div></div>
+      <p class="q-text" id="qText"></p>
+      <div class="options" id="textOptions" hidden></div>
+      <div class="photo-options" id="photoOptions" hidden></div>
+      <div class="reveal" id="reveal" hidden></div>
+      <div class="next-row"><button class="next-btn" id="nextBtn" hidden><span id="nextLabel">Next</span> <span class="arrow">→</span></button></div>
+    </div>
+
+    <div id="finaleView" hidden>
+      <div class="finale">
+        <p class="kicker">Results</p>
+        <h2>However many<br>you got right —</h2>
+        <div class="score" id="scoreText"></div>
+        <p class="msg" id="finaleMsg"></p>
+
+        <div class="reward" id="rewardSection" hidden>
+          <p class="kicker" style="color:var(--neon-cyan);">Reward Unlocked</p>
+          <h3 class="reward-h">Perfect score.<br>Pick your prize.</h3>
+
+          <div class="reward-tabs">
+            <button class="reward-tab active" id="tabDate" type="button">Our Next Date</button>
+            <button class="reward-tab" id="tabBday" type="button">Birthday Wish</button>
+          </div>
+
+          <div class="reward-panel" id="panelDate">
+            <p class="reward-prompt">Anything you want. I mean it.</p>
+            <input type="text" id="dateInput" placeholder="Sushi, a road trip, staying in with a movie…" maxlength="120" />
+            <button class="next-btn reward-btn" id="dateSubmit" type="button"><span>Lock It In</span> <span class="arrow">→</span></button>
+            <div class="reward-confirm" id="dateConfirm" hidden>
+              <div class="big">It's a date.</div>
+              <p class="quote" id="dateQuote"></p>
+              <p class="fine-print">Your email app should be open — hit send and I'll make it happen.</p>
+            </div>
+          </div>
+
+          <div class="reward-panel" id="panelBday" hidden>
+            <p class="reward-prompt">What do you want for your birthday? I'm listening.</p>
+            <textarea id="bdayInput" rows="3" placeholder="Be as specific as you want…" maxlength="300"></textarea>
+            <button class="next-btn reward-btn" id="bdaySubmit" type="button"><span>Send It My Way</span> <span class="arrow">→</span></button>
+            <div class="reward-confirm" id="bdayConfirm" hidden>
+              <div class="big">Noted.</div>
+              <p class="fine-print">Your email app should be open — hit send and it's on my radar.</p>
+            </div>
+          </div>
+        </div>
+
+        <button class="replay-btn" id="replayBtn" style="margin-top:30px;">Play Again</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const IMG = {
+  saltys: "images/00ceaed8-7a8f-4088-91e5-4952d3b0d1b8.JPG",
+  birdPjs: "images/IMG_7250.jpeg",
+  greekFreak: "images/IMG_7257.jpeg",
+  birthday: "images/IMG_7393.jpeg",
+  presidents1: "images/IMG_7866.jpeg",
+  presidents2: "images/IMG_7868.jpeg",
+  tenMinutes: "images/IMG_7919.jpeg",
+  lastMorning: "images/IMG_7971.jpeg",
+  greeceBeach: "images/IMG_8481.jpeg",
+  boatDay: "images/IMG_8528.jpeg",
+  beachKiss: "images/IMG_8551.jpeg",
+  sleepyMornings: "images/IMG_8559.jpeg",
+  margsCarbonara: "images/IMG_8623.jpeg",
+  bedSelfie: "images/d2306e89-d6d0-4e36-a6ff-64f992a0c22b.JPG",
+  beezers: "images/e4434afa-1335-4e05-a376-55d6b99a35c8.JPG",
+};
+
+const questions = [
+  {
+    type: "text",
+    q: "Where did we first meet?",
+    options: ["The Hoot", "The Perch", "The Tap Room", "The Pour House"],
+    correct: 0,
+    reveal: "The Hoot — introduced by a mutual friend. Where it all started."
+  },
+  {
+    type: "text",
+    q: "Where was our first official date?",
+    options: ["Weco", "The Hoot", "Sakura", "Beezers"],
+    correct: 2,
+    reveal: "Sakura. Sushi date, obviously."
+  },
+  {
+    type: "text",
+    q: "What did I show up wearing that night, while you showed up in heels?",
+    options: ["Joggers", "Track pants", "Sweatpants", "Basketball shorts"],
+    correct: 2,
+    reveal: "Sweatpants. You: heels. Me: sweatpants. Iconic mismatch energy and it still worked."
+  },
+  {
+    type: "text",
+    q: "Where did I ask you to be my girlfriend?",
+    options: ["Art Bar", "Weco", "My backyard", "The Hoot"],
+    correct: 0,
+    reveal: "Art Bar."
+  },
+  {
+    type: "text",
+    q: "Where exactly, at my house, did I first say “I love you” to you?",
+    options: ["On the porch", "By the pool", "Next to the fountain", "In the backyard"],
+    correct: 3,
+    reveal: "In the backyard."
+  },
+  {
+    type: "text",
+    q: "Who actually said it first?",
+    options: ["You did, because I was too scared", "I did, but my voice cracked", "You did, after I hesitated for a while", "We said it at the exact same time"],
+    correct: 0,
+    reveal: "You did. I was too scared. You've always been braver than me."
+  },
+  {
+    type: "text",
+    q: "What's our anniversary date, from our first kiss?",
+    options: ["November 18th", "November 9th", "October 8th", "November 8th"],
+    correct: 3,
+    reveal: "November 8th."
+  },
+  {
+    type: "text",
+    q: "What do I always order that proves I'm as big a food lover as you?",
+    options: ["Chicken gyro & fries", "Grilled chicken & rice", "Chicken & souvlaki", "Chicken shawarma"],
+    correct: 2,
+    reveal: "Chicken and souvlaki. Every time."
+  },
+  {
+    type: "text",
+    q: "What's the nickname I actually use for you the most?",
+    options: ["Boo", "Booby", "Bubba", "Boo Bear"],
+    correct: 1,
+    reveal: "Booby. (Okay, and booby bebecito. And baby. But mostly booby.)"
+  },
+  {
+    type: "photo",
+    q: "Which photo is from the night you got a little tipsy on margs right before making the best carbonara of your life?",
+    options: [IMG.margsCarbonara, IMG.saltys, IMG.birthday, IMG.boatDay],
+    correct: 0,
+    reveal: "This one. My friends still bring up how much you love margs."
+  },
+  {
+    type: "photo",
+    q: "Which photo is the most unlucky day ever — the boat day my car broke down and everything went wrong?",
+    options: [IMG.greeceBeach, IMG.boatDay, IMG.beachKiss, IMG.birthday],
+    correct: 1,
+    reveal: "Boat day. Genuinely nothing went right that day except being with you."
+  },
+  {
+    type: "photo",
+    q: "Which of these is my favorite picture of us?",
+    options: [IMG.bedSelfie, IMG.beachKiss, IMG.lastMorning, IMG.greeceBeach],
+    correct: 0,
+    reveal: "Honestly, all of them. But I love this picture. So many memories!!!"
+  },
+  {
+    type: "photo",
+    q: "Which photo is from your favorite sandwich spot, where you always get the vegan one?",
+    options: [IMG.saltys, IMG.beezers, IMG.margsCarbonara, IMG.birthday],
+    correct: 1,
+    reveal: "Beezers. You get the vegan sandwich every single time and it's never not funny to me."
+  },
+  {
+    type: "photo",
+    q: "Which photo did I caption “my sleepy baby in bird pajamas”?",
+    options: [IMG.presidents1, IMG.tenMinutes, IMG.birdPjs, IMG.sleepyMornings],
+    correct: 2,
+    reveal: "This one. You're so cute I can't stand it."
+  },
+];
+
+let qi = 0;
+let score = 0;
+let answered = false;
+
+const lockView = document.getElementById('lockView');
+const startView = document.getElementById('startView');
+const quizView = document.getElementById('quizView');
+const finaleView = document.getElementById('finaleView');
+
+// password gate
+const LOCK_PASSWORD = '08112025';
+const lockInput = document.getElementById('lockInput');
+const lockSubmit = document.getElementById('lockSubmit');
+const lockError = document.getElementById('lockError');
+
+function tryUnlock(){
+  if (lockInput.value.trim() === LOCK_PASSWORD){
+    try { sessionStorage.setItem('sophiaUnlocked', '1'); } catch(e){}
+    lockView.hidden = true;
+    startView.hidden = false;
+  } else {
+    lockError.hidden = false;
+    lockInput.value = '';
+    lockInput.classList.remove('shake');
+    void lockInput.offsetWidth;
+    lockInput.classList.add('shake');
+    lockInput.focus();
+  }
+}
+
+lockSubmit.addEventListener('click', tryUnlock);
+lockInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') tryUnlock(); });
+
+try {
+  if (sessionStorage.getItem('sophiaUnlocked') === '1'){
+    lockView.hidden = true;
+    startView.hidden = false;
+  }
+} catch(e){}
+const startBtn = document.getElementById('startBtn');
+const qFolio = document.getElementById('qFolio');
+const qText = document.getElementById('qText');
+const textOptions = document.getElementById('textOptions');
+const photoOptions = document.getElementById('photoOptions');
+const revealEl = document.getElementById('reveal');
+const nextBtn = document.getElementById('nextBtn');
+const progressFill = document.getElementById('progressFill');
+const scoreText = document.getElementById('scoreText');
+const finaleMsg = document.getElementById('finaleMsg');
+const replayBtn = document.getElementById('replayBtn');
+
+const LETTERS = ['A', 'B', 'C', 'D'];
+
+function pad(n){ return n < 10 ? '0' + n : '' + n; }
+
+function shuffleWithIndex(arr, correctIdx){
+  const items = arr.map((val, i) => ({ val, isCorrect: i === correctIdx }));
+  for (let i = items.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [items[i], items[j]] = [items[j], items[i]];
+  }
+  return items;
+}
+
+function renderQuestion(){
+  answered = false;
+  const q = questions[qi];
+  qFolio.textContent = `${pad(qi + 1)} / ${questions.length}`;
+  progressFill.style.width = `${(qi / questions.length) * 100}%`;
+  qText.textContent = q.q;
+  revealEl.hidden = true;
+  revealEl.className = 'reveal';
+  nextBtn.hidden = true;
+
+  const shuffled = shuffleWithIndex(q.options, q.correct);
+
+  if (q.type === 'text'){
+    textOptions.hidden = false;
+    photoOptions.hidden = true;
+    textOptions.innerHTML = '';
+    shuffled.forEach((item, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'opt-row';
+      btn.innerHTML = `<span class="mark">${LETTERS[i]}</span><span>${item.val}</span>`;
+      btn.addEventListener('click', () => selectAnswer(item.isCorrect, btn, textOptions));
+      textOptions.appendChild(btn);
+    });
+  } else {
+    photoOptions.hidden = false;
+    textOptions.hidden = true;
+    photoOptions.innerHTML = '';
+    shuffled.forEach((item, i) => {
+      const div = document.createElement('div');
+      div.className = 'photo-opt';
+      div.innerHTML = `<span class="mark">${LETTERS[i]}</span>`;
+      const img = document.createElement('img');
+      img.src = item.val;
+      img.alt = '';
+      div.appendChild(img);
+      div.addEventListener('click', () => selectAnswer(item.isCorrect, div, photoOptions));
+      photoOptions.appendChild(div);
+    });
+  }
+}
+
+function selectAnswer(isCorrect, el, container){
+  if (answered) return;
+  answered = true;
+  if (isCorrect) score++;
+
+  const children = Array.from(container.children);
+  children.forEach(c => {
+    c.classList.add('locked');
+    if (c === el){
+      c.classList.add(isCorrect ? 'correct' : 'incorrect');
+    } else {
+      c.classList.add(container === textOptions ? 'faded' : 'dim');
+    }
+  });
+  if (container === textOptions){
+    children.forEach(c => c.disabled = true);
+  }
+
+  const q = questions[qi];
+  revealEl.hidden = false;
+  revealEl.className = 'reveal ' + (isCorrect ? 'good' : 'bad');
+  revealEl.innerHTML = `<span class="tag">${isCorrect ? "Correct" : "Not quite"}</span>${q.reveal}`;
+  nextBtn.hidden = false;
+  progressFill.style.width = `${((qi + 1) / questions.length) * 100}%`;
+}
+
+nextBtn.addEventListener('click', () => {
+  qi++;
+  if (qi < questions.length){
+    renderQuestion();
+  } else {
+    showFinale();
+  }
+});
+
+function showFinale(){
+  quizView.hidden = true;
+  finaleView.hidden = false;
+  scoreText.textContent = `${score} / ${questions.length}`;
+  let msg;
+  const isPerfect = score === questions.length;
+  if (isPerfect){
+    msg = "Perfect score. Honestly not surprised — nobody knows our story better than you do. I love you, Sophia.";
+  } else if (score >= questions.length * 0.6){
+    msg = "You know us so well. Every one of these is a real memory of ours, right or wrong. I love you, Sophia.";
+  } else {
+    msg = "Score doesn't matter — every single one of these is real, and every one of them is us. I love you, Sophia.";
+  }
+  finaleMsg.textContent = msg;
+  rewardSection.hidden = !isPerfect;
+}
+
+startBtn.addEventListener('click', () => {
+  startView.hidden = true;
+  quizView.hidden = false;
+  qi = 0; score = 0;
+  renderQuestion();
+});
+
+replayBtn.addEventListener('click', () => {
+  finaleView.hidden = true;
+  startView.hidden = false;
+  resetReward();
+});
+
+// reward panel: unlocked on a perfect score
+const rewardSection = document.getElementById('rewardSection');
+const tabDate = document.getElementById('tabDate');
+const tabBday = document.getElementById('tabBday');
+const panelDate = document.getElementById('panelDate');
+const panelBday = document.getElementById('panelBday');
+const dateInput = document.getElementById('dateInput');
+const dateSubmit = document.getElementById('dateSubmit');
+const dateConfirm = document.getElementById('dateConfirm');
+const dateQuote = document.getElementById('dateQuote');
+const bdayInput = document.getElementById('bdayInput');
+const bdaySubmit = document.getElementById('bdaySubmit');
+const bdayConfirm = document.getElementById('bdayConfirm');
+const REWARD_EMAIL = 'mitsosaggelo@gmail.com';
+
+tabDate.addEventListener('click', () => {
+  tabDate.classList.add('active');
+  tabBday.classList.remove('active');
+  panelDate.hidden = false;
+  panelBday.hidden = true;
+});
+
+tabBday.addEventListener('click', () => {
+  tabBday.classList.add('active');
+  tabDate.classList.remove('active');
+  panelBday.hidden = false;
+  panelDate.hidden = true;
+});
+
+dateSubmit.addEventListener('click', () => {
+  const val = dateInput.value.trim();
+  if (!val){ dateInput.focus(); return; }
+  const subject = "Our Next Date";
+  const body = `Sophia picked our next date:\n\n"${val}"\n\n— sent from the trivia surprise`;
+  window.location.href = `mailto:${REWARD_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  dateQuote.textContent = `"${val}"`;
+  dateInput.hidden = true;
+  dateSubmit.hidden = true;
+  dateConfirm.hidden = false;
+});
+
+bdaySubmit.addEventListener('click', () => {
+  const val = bdayInput.value.trim();
+  if (!val){ bdayInput.focus(); return; }
+  const subject = "My Birthday Wish";
+  const body = `${val}\n\n— sent from the trivia surprise`;
+  window.location.href = `mailto:${REWARD_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  bdayInput.hidden = true;
+  bdaySubmit.hidden = true;
+  bdayConfirm.hidden = false;
+});
+
+function resetReward(){
+  tabDate.classList.add('active');
+  tabBday.classList.remove('active');
+  panelDate.hidden = false;
+  panelBday.hidden = true;
+  dateInput.value = '';
+  dateInput.hidden = false;
+  dateSubmit.hidden = false;
+  dateConfirm.hidden = true;
+  bdayInput.value = '';
+  bdayInput.hidden = false;
+  bdaySubmit.hidden = false;
+  bdayConfirm.hidden = true;
+}
+
+const NEON_COLORS = ['#ff8fd4', '#22e5ff', '#c77dff', '#ff2e9a'];
+const heartsBg = document.getElementById('heartsBg');
+for (let i = 0; i < 12; i++){
+  const h = document.createElement('div');
+  h.className = 'float-heart';
+  h.textContent = Math.random() > 0.5 ? '♥' : '♡';
+  h.style.left = Math.random() * 100 + '%';
+  h.style.color = NEON_COLORS[Math.floor(Math.random() * NEON_COLORS.length)];
+  h.style.fontSize = (0.8 + Math.random() * 1.1) + 'rem';
+  h.style.setProperty('--drift', (Math.random() * 80 - 40) + 'px');
+  const duration = 10 + Math.random() * 10;
+  h.style.animationDuration = duration + 's';
+  h.style.animationDelay = (Math.random() * duration) + 's';
+  heartsBg.appendChild(h);
+}
+
+// background music — plain YouTube embed, loaded directly inside this button's
+// own click handler. Browsers only guarantee autoplay-with-sound when it's the
+// immediate, direct result of a real click like this one — chaining it off of
+// some other button's handler (or trying to auto-start it) is what silently
+// got blocked before.
+const playMusicBtn = document.getElementById('playMusicBtn');
+const nowPlaying = document.getElementById('nowPlaying');
+const ytFrame = document.getElementById('ytFrame');
+
+playMusicBtn.addEventListener('click', () => {
+  ytFrame.src = 'https://www.youtube-nocookie.com/embed/hGQSAua3n0Q?autoplay=1&rel=0&modestbranding=1&playsinline=1';
+  nowPlaying.hidden = false;
+  playMusicBtn.hidden = true;
+});
+</script>
+
+</body>
+</html>
